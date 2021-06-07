@@ -61,26 +61,27 @@ export function StaticTextOptions({options, updateOptions}) {
 
 export function StaticText({options}) {
 	let styles = '';
+	let textStyles = '';
 
 	if(typeof options.fontSize !== 'undefined') {
-		styles += `font-size: ${options.fontSize}px; `;
+		textStyles += `font-size: ${options.fontSize}px; `;
 	}
 	if(typeof options.backgroundColor !== 'undefined') {
 		styles += `background-color: ${options.backgroundColor}; `;
 	}
 	if(typeof options.fontColor !== 'undefined') {
-		styles += `color: ${options.fontColor}; `;
+		textStyles += `color: ${options.fontColor}; `;
 	}
 	if(typeof options.textAlign !== 'undefined') {
-		styles += `justify-content: ${options.textAlign}; `;
+		textStyles += `justify-content: ${options.textAlign}; `;
 	}
 	if(typeof options.textVerticalAlign !== 'undefined') {
-		styles += `align-items: ${options.textVerticalAlign}; `;
+		textStyles += `align-items: ${options.textVerticalAlign}; `;
 	}
 
 
 	return <div class="check-content text" style={styles}>
-		{options.text}
+		<div class ="inner-text" style={textStyles}>{options.text}</div>
 	</div>
 }
 
