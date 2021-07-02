@@ -15,6 +15,7 @@ import { StaticSVG, StaticSVGOptions, StaticSVGDefaults } from './statics/svg';
 import { StaticImage, StaticImageOptions } from './statics/image';
 import { IframeVideo, IframeVideoOptions } from './elements/video';
 import { AudioStream, AudioOptions } from './elements/audio';
+import { HoverText } from './tools/hover';
 
 //Manage dashboard state
 const dashboardReducer = (state, action) => {
@@ -170,8 +171,37 @@ export function Editor({slug, selectedElementId}) {
 }
 
 function TransformableElement({rect, updateRect, checkType, rotation, updateRotation, children, glow, highlight}) {
+	const [mouseOn, setMouseOn] = useState(false);
+	const [style, setStyle] = useState("");
+
+	const onMouseOver = (element, bool) => {
+		setMouseOn(bool);
+
+		const elementRect = element.target.getBoundingClientRect();
+        var x = window.innerWidth / 2;
+        var y = window.innerHeight / 2;
+
+        if (x < elementRect.x && elementRect.y < y) {
+            setStyle("right: 50%; top: 60%");
+        }
+
+        if (x > elementRect.x && elementRect.y < y) {
+            setStyle("left: 50%; top: 60%");
+        }
+
+        if (x < elementRect.x && elementRect.y > y) {
+            setStyle("right: 50%; top: -10%");
+        }
+
+        if (x > elementRect.x && elementRect.y > y) {
+            setStyle("left: 50%; top: -10%");
+        }
+	}
+
 	//Handle dragging elements
 	const handleMove = downEvent => {
+		setMouseOn(false);
+
 		const mousemove = moveEvent => {
 
 			let elementNode = downEvent.target;
@@ -207,6 +237,7 @@ function TransformableElement({rect, updateRect, checkType, rotation, updateRota
 
 		//Remove listeners on mouse button up
 		const mouseup = () => {
+			setMouseOn(true);
 			window.removeEventListener('mousemove', mousemove);
 			window.removeEventListener('mouseup', mouseup);
 		}
@@ -219,6 +250,7 @@ function TransformableElement({rect, updateRect, checkType, rotation, updateRota
 
 	const handleResize = downEvent => {
 		downEvent.stopPropagation();
+		setMouseOn(false);
 
 		const mousemove = moveEvent => {
 			//Go up an element due to resize dot
@@ -248,6 +280,7 @@ function TransformableElement({rect, updateRect, checkType, rotation, updateRota
 
 		//Remove listeners on mouse button up
 		const mouseup = () => {
+			setMouseOn(true);
 			window.removeEventListener('mousemove', mousemove);
 			window.removeEventListener('mouseup', mouseup);
 		}
@@ -258,6 +291,7 @@ function TransformableElement({rect, updateRect, checkType, rotation, updateRota
 	}
 
 	const handleRotate = downEvent => {
+		setMouseOn(false);
 		downEvent.stopPropagation();
 
 		const mousemove = moveEvent => {
@@ -276,6 +310,7 @@ function TransformableElement({rect, updateRect, checkType, rotation, updateRota
 
 		//Remove listeners on mouse button up
 		const mouseup = () => {
+			setMouseOn(true);
 			window.removeEventListener('mousemove', mousemove);
 			window.removeEventListener('mouseup', mouseup);
 		}
@@ -303,10 +338,11 @@ function TransformableElement({rect, updateRect, checkType, rotation, updateRota
 
 	return <div class={`check ${glow || highlight ? 'glow' : ''}`}
 		style={{left: left, top: top, width: width, height: height, transform: _rotation}}
-		onMouseDown={handleMove}>
+		onMouseDown={handleMove} onMouseEnter={e => onMouseOver(e, true)} onMouseLeave={e => onMouseOver(e, false)}>
 			{children}
 			<div class="resize" onMouseDown={handleResize}></div>
 			<div class="rotate" onMouseDown={handleRotate}></div>
+			<HoverText options={children.props.options} mouseOn={mouseOn} style={style} />
 	</div>
 }
 

@@ -4,12 +4,13 @@ import * as meerkat from '../meerkat';
 import { icingaResultCodeToCheckState, IcingaCheckList, getPerfData, alertSounds } from '../util';
 
 export function CheckCard({options, slug, dashboard}) {
+	const [acknowledged, setAcknowledged] = useState("");
 	const [checkState, setCheckState] = useState(null);
 	const [perfValue, setPerfValue] = useState(null);
-	const [acknowledged, setAcknowledged] = useState("");
 
 	const updateState = async () => {
 		getPerfData(options, perfDataSelected);
+
 		if (options.objectType !== null && options.filter !== null) {
 			try {
 				const res = await meerkat.getIcingaObjectState(options.objectType, options.filter, dashboard);

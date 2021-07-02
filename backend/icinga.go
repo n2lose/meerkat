@@ -36,6 +36,7 @@ type icingaAttributes struct {
 	Interval        float32  `json:"check_interval"`
 	Groups          []string `json:"groups"`
 	Vars            vars     `json:"vars,omitempty"`
+	Notes           string   `json:"notes"`
 }
 
 type vars struct{}
@@ -123,6 +124,7 @@ type varsBefore struct {
 type together struct {
 	MaxState     int64
 	Acknowledged int64
+	Notes        string
 }
 
 func handleCheckResult(w http.ResponseWriter, r *http.Request) {
@@ -162,8 +164,8 @@ func initIcingaCheckResultCache() {
 				return fmt.Errorf("Invalid cache key")
 			}
 
-			object  := bits[0]
-			attrs   := bits[1]
+			object := bits[0]
+			attrs := bits[1]
 			objType := bits[2]
 
 			client := &http.Client{}
@@ -276,7 +278,7 @@ func initIcingaCheckStateCache() {
 			}
 
 			object_type := bits[0]
-			filter     := bits[1]
+			filter := bits[1]
 
 			client := &http.Client{}
 			//Disable TLS verification if config says so
@@ -328,6 +330,7 @@ func initIcingaCheckStateCache() {
 
 			max_state := int64(0)
 			acknowledged := int64(0)
+			var notes string
 
 			for _, obj := range results.Results {
 				if int64(obj.Attributes.Acknowledgement) == 1 {
@@ -339,10 +342,12 @@ func initIcingaCheckStateCache() {
 						max_state = int64(obj.Attributes.State)
 					}
 				}
+				notes = string(obj.Attributes.Notes)
 			}
 
 			t := together{MaxState: max_state}
 			t.Acknowledged = acknowledged
+			t.Notes = notes
 
 			if enc, err := json.Marshal(&t); err != nil {
 				log.Printf("Failed to encode IcingaCheckState value: %w", err)
@@ -393,8 +398,8 @@ func initIcingaCheckCache() {
 			}
 
 			checkType := bits[0]
-			objectID  := bits[1]
-			filter    := bits[2]
+			objectID := bits[1]
+			filter := bits[2]
 
 			client := &http.Client{}
 			//Disable TLS verification if config says so
@@ -464,10 +469,8 @@ func initIcingaCheckCache() {
 func handleIcingaVars(w http.ResponseWriter, r *http.Request) {
 	hostName := chi.URLParam(r, "host-name")
 
-	fmt.Println(hostName)
-
 	if hostName == "" {
-		http.Error(w, "No host name specified!!", http.StatusBadRequest)
+		http.Error(w, "No host name specified", http.StatusBadRequest)
 		return
 	}
 
@@ -540,6 +543,83 @@ func initIcingaVarsCache() {
 			}
 		},
 	))
+}
+
+func handleIcingaObjectInfo(w http.ResponseWriter, r *http.Request) {
+	objType := r.URL.Query().Get("obj_type")
+	objName := r.URL.Query().Get("object_name")
+
+	if objType == "" {
+		http.Error(w, "No object type specified", http.StatusBadRequest)
+		return
+	}
+
+	if objName == "" {
+		http.Error(w, "No object name specified", http.StatusBadRequest)
+		return
+	}
+
+	client := &http.Client{}
+	//Disable TLS verification if config says so
+	if config.IcingaInsecureTLS {
+		client.Transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}
+	}
+
+	var reqUrl string
+
+	if objType == "host" {
+		requestString, _ := http.NewRequest("GET", strings.Join([]string{config.IcingaURL, "/v1/objects/services"}, ""), nil)
+		q := requestString.URL.Query()
+		q.Add("filter", strings.Join([]string{"match(\"", objName, "\", host.name)"}, ""))
+		requestString.URL.RawQuery = q.Encode()
+		reqUrl = requestString.URL.String()
+	}
+
+	req, err := http.NewRequest("GET", reqUrl, nil)
+	if err != nil {
+		log.Printf("Failed to create HTTP request: %w", err)
+		http.Error(w, "Error creating http request: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	req.SetBasicAuth(config.IcingaUsername, config.IcingaPassword)
+
+	//Make request
+	res, err := client.Do(req)
+	if err != nil {
+		log.Printf("Icinga2 API error: %w", err.Error())
+		http.Error(w, "Icinga2 API error: "+err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	defer res.Body.Close()
+
+	var results interface{}
+	dec := json.NewDecoder(res.Body)
+	err = dec.Decode(&results)
+
+	if err != nil {
+		log.Printf("Error decoding Icinga2 API response: %w", err.Error())
+		return
+	}
+
+	enc := json.NewEncoder(w)
+	enc.Encode(results)
+
+	// For hosts
+	// https://subview.hq.sol1.net:5665/v1/objects/services?filter=match("sanctuary.hq.sol1.net", host.name)
+
+	// For services
+	// https://subview.hq.sol1.net:5665/v1/objects/services?filter=match("All Disks", service.name)
+
+	// For servicegroups
+	// https://subview.hq.sol1.net:5665/v1/objects/services?filter="disk" in service.groups
+
+	// For hostgroups
+	// https://subview.hq.sol1.net:5665/v1/objects/hosts?filter="linux-servers" in host.groups
+
 }
 
 func initialiseIcingaCaches() {

@@ -601,6 +601,7 @@ div.dashboard-wrap {
 	display: flex;
 	justify-content: center;
 	align-items: center;
+	overflow: hidden;
 }
 
 .dashboard.view-only {
@@ -774,7 +775,7 @@ div.tag .close-icon {
 .check {
 	cursor: move;
 	position: absolute;
-	overflow: hidden;
+	/* overflow: hidden; */
 	text-transform: uppercase;
 }
 
@@ -786,7 +787,7 @@ div.tag .close-icon {
 	position: absolute;
 	right: -4px;
 	bottom: -4px;
-	width: 12px;
+	width: 6px;
 	height: 12px;
 	background-color: #007bff;
 	cursor: se-resize;
@@ -802,6 +803,29 @@ div.tag .close-icon {
 	background-color: #007bff;
 	cursor: ns-resize;
 	border-radius: 1px;
+}
+
+.check > div.hover {
+	top: 0%;
+	width: 300px;
+	height: 100px;
+	background-color: #3a3f44;
+	color: white;
+	border-radius: 2px;
+	padding-top: 15px;
+	padding-bottom: 10px;
+	padding-left: 5px;
+	padding-right: 5px;
+	position: absolute;
+}
+
+.check > div.hover > p {
+	text-align: center;
+}
+
+.check > div.hover > hr {
+	padding: 6px;
+	margin: 0 auto;
 }
 
 .check > .check-content {

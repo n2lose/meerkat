@@ -118,6 +118,8 @@ func main() {
 	r.Get("/icinga/check_state", handleIcingaCheckState)
 	r.Get("/icinga/check_result", handleCheckResult)
 
+	r.Get("/icinga/objinfo", handleIcingaObjectInfo)
+
 	r.Get("/template", handleCreateTemplate)
 
 	r.Post("/upload", handleUpload)

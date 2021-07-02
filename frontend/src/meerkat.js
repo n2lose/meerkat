@@ -34,6 +34,11 @@ export async function getCheckResult(objType, object, attrs="last_check_result")
 	return fetchHandler(`/icinga/check_result?objtype=${objType};object=${encodeURIComponent(object)};attrs=${encodeURIComponent(attrs)}`);
 }
 
+export async function getIcingaObjectInfo(objType, obj) {
+	const res = await fetch(`/icinga/objinfo?obj_type=${encodeURIComponent(objType)};object_name=${encodeURIComponent(obj)}`)
+	return res.json();
+}
+
 export async function getDashboard(slug) {
 	return fetchHandler(`/dashboard/${slug}`);
 }
