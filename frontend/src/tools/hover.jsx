@@ -57,11 +57,7 @@ export function HoverText({options, mouseOn, style}) {
         }
     }, [mouseOn]);
 
-    if (!hostInfo) {
-        return <div class="hover" style={style}>
-        <p>Loading...</p>
-    </div>
-    }
+    if (!hostInfo) return;
 
     if (mouseOn) {
         return <div class="hover" style={style}>

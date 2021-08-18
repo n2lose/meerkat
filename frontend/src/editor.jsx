@@ -178,24 +178,42 @@ function TransformableElement({rect, updateRect, checkType, rotation, updateRota
 		setMouseOn(bool);
 
 		const elementRect = element.target.getBoundingClientRect();
-        var x = window.innerWidth / 2;
-        var y = window.innerHeight / 2;
 
-        if (x < elementRect.x && elementRect.y < y) {
-            setStyle("right: 50%; top: 60%");
-        }
+		const dashboard = element.target.parentElement.getBoundingClientRect();
 
-        if (x > elementRect.x && elementRect.y < y) {
-            setStyle("left: 50%; top: 60%");
-        }
+		//Screen
+		const xScreen = window.innerWidth;
+		const yScreen = window.innerHeight;
 
-        if (x < elementRect.x && elementRect.y > y) {
-            setStyle("right: 50%; top: -10%");
-        }
+		//Mouse
+		const xMouse = element.clientX;
+		const yMouse = element.clientY;
 
-        if (x > elementRect.x && elementRect.y > y) {
-            setStyle("left: 50%; top: -10%");
-        }
+		//Parent
+		const parentTop = elementRect.top
+		const parentLeft = elementRect.left
+
+		setStyle(`transform: rotate(${-rotation}rad); top: calc(${yMouse}px - ${parentTop - 20}px); left: calc(${xMouse}px - ${parentLeft - 20}px);`);
+		// setStyle(`top: calc(${yMouse}px - ${(dashboard - yScreen) - 20}px); left: calc(${xMouse}px - ${(dashboard - xScreen) - 20}px);`);
+
+        // if (xScreen < elementRect.x && elementRect.y < yScreen) {
+        //     // setStyle("right: 50%; top: 60%");
+		// 	setStyle(`right: ${xMouse - parentLeft}px; top: ${yMouse - parentTop}px; `)
+        // }
+
+        // if (xScreen > elementRect.x && elementRect.y < yScreen) {
+        //     setStyle(`top: ${yMouse - parentTop}px; left: ${xMouse - parentLeft}px; `);
+        // }
+
+        // if (xScreen < elementRect.x && elementRect.y > yScreen) {
+        //     // setStyle("right: 50%; top: -10%");
+		// 	setStyle(`right: ${xMouse - parentLeft}px; top: -${yMouse - parentTop}px; `)
+        // }
+
+        // if (xScreen > elementRect.x && elementRect.y > yScreen) {
+        //     // setStyle("left: 50%; top: -10%");
+		// 	setStyle(`left: ${xMouse - parentLeft}px; top: -${yMouse - parentTop}px; `)
+        // }
 	}
 
 	//Handle dragging elements
@@ -338,7 +356,7 @@ function TransformableElement({rect, updateRect, checkType, rotation, updateRota
 
 	return <div class={`check ${glow || highlight ? 'glow' : ''}`}
 		style={{left: left, top: top, width: width, height: height, transform: _rotation}}
-		onMouseDown={handleMove} onMouseEnter={e => onMouseOver(e, true)} onMouseLeave={e => onMouseOver(e, false)}>
+		onMouseDown={handleMove} onMouseMove={e => onMouseOver(e, true)} onMouseLeave={e => onMouseOver(e, false)}>
 			{children}
 			<div class="resize" onMouseDown={handleResize}></div>
 			<div class="rotate" onMouseDown={handleRotate}></div>
